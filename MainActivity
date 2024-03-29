@@ -1,0 +1,106 @@
+package com.hengki.github
+
+import android.content.ClipData.Item
+import android.os.Bundle
+import android.util.Log
+import android.view.View
+import android.widget.Toast
+import androidx.appcompat.app.AppCompatActivity
+import androidx.lifecycle.ViewModelProvider
+import androidx.recyclerview.widget.DividerItemDecoration
+import androidx.recyclerview.widget.LinearLayoutManager
+import com.hengki.github.data.response.GithubResponse
+import com.hengki.github.data.response.ItemsItem
+import com.hengki.github.data.retrofit.ApiConfig
+import com.hengki.github.databinding.ActivityMainBinding
+import com.hengki.github.ui.MainViewModel
+import com.hengki.github.ui.UsersAdapter
+import retrofit2.Call
+import retrofit2.Callback
+import retrofit2.Response
+
+class MainActivity : AppCompatActivity() {
+
+    private lateinit var binding: ActivityMainBinding
+
+    companion object {
+        private const val TAG = "MainActivity"
+        private const val GitHub_ID ="reihan"
+    }
+
+    override fun onCreate(savedInstanceState: Bundle?) {
+        super.onCreate(savedInstanceState)
+        binding= ActivityMainBinding.inflate(layoutInflater)
+        setContentView(binding.root)
+
+        supportActionBar?.hide()
+
+        val mainViewModel = ViewModelProvider(this, ViewModelProvider.NewInstanceFactory()).get(MainViewModel::class.java)
+
+        with(binding) {
+            searchView.setupWithSearchBar(searchBar)
+            searchView
+                .editText
+                .setOnEditorActionListener { textView, actionId, event ->
+                    mainViewModel.ItemsItem(searchView.text.toString())
+                    searchBar.setText(searchView.text)
+                    searchView.hide()
+                    Toast.makeText(this@MainActivity, searchView.text, Toast.LENGTH_SHORT).show()
+                    false
+                }
+        }
+        mainViewModel.listUser.observe(this) {
+            setReviewData(it)
+        }
+
+        val layoutManager = LinearLayoutManager(this)
+        binding.gUsers.layoutManager = layoutManager
+        val itemDecoration = DividerItemDecoration(this, layoutManager.orientation)
+        binding.gUsers.addItemDecoration(itemDecoration)
+        findGitHub()
+    }
+
+
+    private fun findGitHub() {
+        showLoading(true)
+        val client = ApiConfig.getApiService().itemsItem(GitHub_ID)
+        client.enqueue(object: Callback<GithubResponse> {
+            override  fun onResponse(
+                call: Call<GithubResponse>,
+                response: Response<GithubResponse>
+            ){
+                showLoading(false)
+                if (response.isSuccessful) {
+                    val responseBody = response.body()
+                    if (responseBody != null) {
+                        setReviewData(responseBody.items)
+                    }
+                } else {
+                    Log.e(TAG, "onFailure: ${response.message()}")
+                }
+
+            }
+            override fun onFailure(call: Call<GithubResponse>, t: Throwable) {
+                showLoading(false)
+                Log.e(TAG, "onFailure: ${t.message}")
+            }
+        })
+    }
+
+    private fun setReviewData(items: List<ItemsItem>) {
+        val adapter = UsersAdapter()
+        adapter.submitList(items)
+        binding.gUsers.adapter = adapter
+
+    }
+
+
+    private fun showLoading(isLoading: Boolean) {
+        if (isLoading) {
+            binding.progressBar.visibility = View.VISIBLE
+        } else {
+            binding.progressBar.visibility = View.GONE
+        }
+
+    }
+}
