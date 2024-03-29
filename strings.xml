@@ -1,0 +1,11 @@
+<resources>
+    <string name="app_name">Github</string>
+    <string name="review">Cari disini</string>
+    <string name="send">Kirim</string>
+    <string name="login">User</string>
+    <string name="users_name">Nama di sini</string>
+    <string name="searchbar_hint">Cari siapa nih?</string>
+    <string name="this_activity">Ditunggu ya!</string>
+    <string name="github_name">Perbaiki</string>
+    <string name="username">Perbaiki2</string>
+</resources>
