@@ -25,8 +25,8 @@ class FollowersFragment: Fragment(R.layout.fragment_follow) {
 
 
 
-        //adapter = UsersAdapter()
-        //adapter.notifyDataSetChanged()
+        adapter = UsersAdapter { }
+        adapter.notifyDataSetChanged()
 
         binding.apply {
             gUsers.setHasFixedSize(true)
