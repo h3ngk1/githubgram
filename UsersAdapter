@@ -1,5 +1,6 @@
 package com.hengki.github.ui
 
+import android.annotation.SuppressLint
 import android.view.LayoutInflater
 import android.view.View
 import android.view.ViewGroup
@@ -13,8 +14,17 @@ import com.hengki.github.R
 import com.hengki.github.Users
 import com.hengki.github.data.response.ItemsItem
 import com.hengki.github.databinding.UsersRowBinding
+import com.hengki.github.ui.UsersAdapter.OnItemClickCallback as OnItemClickCallback1
 
-class UsersAdapter : ListAdapter<ItemsItem, UsersAdapter.MyViewHolder>(DIFF_CALLBACK) {
+class UsersAdapter(private var listener:(ItemsItem) -> Unit): ListAdapter<ItemsItem, UsersAdapter.MyViewHolder>(DIFF_CALLBACK) {
+
+    private val list = ArrayList<Users>()
+
+    private var onItemClickCallback: OnItemClickCallback? = null
+
+    fun setOnItemClickCallback (onItemClickCallback: OnItemClickCallback) {
+        this.onItemClickCallback = onItemClickCallback
+    }
 
     override fun onCreateViewHolder(parent: ViewGroup, viewType: Int): MyViewHolder {
         val binding = UsersRowBinding.inflate(LayoutInflater.from(parent.context), parent, false)
@@ -23,11 +33,21 @@ class UsersAdapter : ListAdapter<ItemsItem, UsersAdapter.MyViewHolder>(DIFF_CALL
     override fun onBindViewHolder(holder: MyViewHolder, position: Int) {
         val login = getItem(position)
         holder.bind(login)
+        holder.itemView.setOnClickListener { listener(login) }
+    }
+
+    fun setList(users: ArrayList<Users>) {
+        list.clear()
+        list.addAll(users)
+        notifyDataSetChanged()
     }
 
 
-    class MyViewHolder(val binding: UsersRowBinding) : RecyclerView.ViewHolder(binding.root) {
+    inner class MyViewHolder(val binding: UsersRowBinding) : RecyclerView.ViewHolder(binding.root) {
         fun bind(review: ItemsItem){
+            binding.root.setOnClickListener {
+                onItemClickCallback?.onItemClicked(review)
+            }
             binding.tvItemName.text = "${review.login}"
             Glide.with(itemView.context)
                 .load(review.avatarUrl)
@@ -41,11 +61,16 @@ class UsersAdapter : ListAdapter<ItemsItem, UsersAdapter.MyViewHolder>(DIFF_CALL
             override fun areItemsTheSame(oldItem: ItemsItem, newItem: ItemsItem): Boolean {
                 return oldItem == newItem
             }
+            @SuppressLint("DiffUtilEquals")
             override fun areContentsTheSame(oldItem: ItemsItem, newItem: ItemsItem): Boolean {
                 return oldItem == newItem
             }
         }
     }
 
+    interface OnItemClickCallback{
+        fun onItemClicked(data: ItemsItem)
+    }
 
 }
+
