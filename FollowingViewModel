@@ -1,0 +1,47 @@
+package com.hengki.github.ui
+
+import android.util.Log
+import androidx.lifecycle.LiveData
+import androidx.lifecycle.MutableLiveData
+import androidx.lifecycle.ViewModel
+import com.hengki.github.Users
+import com.hengki.github.data.response.DetailUsersResponse
+import com.hengki.github.data.retrofit.ApiConfig
+import com.hengki.github.ui.MainViewModel.Companion.TAG
+import retrofit2.Call
+import retrofit2.Callback
+import retrofit2.Response
+import retrofit2.Retrofit
+
+class FollowingViewModel : ViewModel() {
+    val listFollowing = MutableLiveData<ArrayList<Users>>()
+
+    private val _isLoading = MutableLiveData<Boolean>()
+    val isLoading: LiveData<Boolean> = _isLoading
+
+    fun setListFollowing(username: String) {
+        _isLoading.value = true
+        val client = ApiConfig.getApiService().getFollowing(username)
+        client.enqueue(object : Callback<ArrayList<Users>> {
+            override fun onResponse(
+                call: Call<ArrayList<Users>>,
+                response: Response<ArrayList<Users>>
+            ) {
+                _isLoading.value = true
+                if (response.isSuccessful) {
+                    listFollowing.postValue(response.body())
+                }
+            }
+
+            override fun onFailure(call: Call<ArrayList<Users>>, t: Throwable) {
+                _isLoading.value = false
+                Log.e(TAG, "onFailure: ${t.message}")
+            }
+        })
+    }
+
+    fun getListFollowing(): LiveData<ArrayList<Users>> {
+        return listFollowing
+    }
+
+}
